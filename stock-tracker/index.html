@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Stock Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Daily Stock Tracker</p>
+        <div class="hero-copy">
+          <h1>Updated daily stock prices.</h1>
+          <p class="hero-text">
+            This page follows LRCX, MU, several major tech leaders, and the broader S&amp;P 500
+            trend using daily closes. The benchmark line is shown through <strong>SPY</strong> so
+            the market view refreshes reliably alongside the stock names, and VIX has its own
+            dedicated volatility panel below.
+          </p>
+        </div>
+        <div class="hero-meta">
+          <span id="status-pill" class="pill">Loading prices…</span>
+          <span id="updated-at" class="meta-note">Waiting for first refresh.</span>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section id="cards" class="cards" aria-label="Latest stock prices"></section>
+
+        <section class="chart-panel">
+          <div class="chart-toolbar">
+            <div class="toolbar-copy">
+              <h2>Daily close history</h2>
+              <p>Daily points are refreshed automatically and can be refreshed on demand.</p>
+            </div>
+            <div class="toolbar-actions">
+              <div class="range-picker" aria-label="Time range">
+                <button class="range-button is-active" data-range="3mo">3M</button>
+                <button class="range-button" data-range="6mo">6M</button>
+                <button class="range-button" data-range="1y">1Y</button>
+                <button class="range-button" data-range="2y">2Y</button>
+                <button class="range-button" data-range="5y">5Y</button>
+                <button class="range-button" data-range="max">MAX</button>
+              </div>
+              <button id="refresh-button" class="refresh-button">Refresh now</button>
+            </div>
+          </div>
+
+          <div class="chart-frame">
+            <canvas id="chart" aria-label="Daily stock price line chart"></canvas>
+            <div id="tooltip" class="tooltip" hidden></div>
+          </div>
+
+          <div id="legend" class="chart-legend" aria-hidden="true"></div>
+        </section>
+
+        <section class="chart-panel">
+          <div class="chart-toolbar chart-toolbar-single">
+            <div class="toolbar-copy">
+              <h2>CBOE Volatility Index (VIX)</h2>
+              <p>Tracked separately so volatility stays readable against much larger stock prices.</p>
+            </div>
+          </div>
+
+          <div class="chart-frame chart-frame-compact">
+            <canvas id="vix-chart" aria-label="CBOE Volatility Index line chart"></canvas>
+            <div id="vix-tooltip" class="tooltip" hidden></div>
+          </div>
+
+          <div id="vix-legend" class="chart-legend" aria-hidden="true"></div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
