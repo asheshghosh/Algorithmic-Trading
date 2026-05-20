@@ -1,10 +1,11 @@
-# Daily stock tracker
+# Category ETF tracker
 
-This page tracks daily closing prices for:
+This page tracks grouped daily closing prices for:
 
-- `LRCX`, `MU`, `AAPL`, `MSFT`, `NVDA`, `AMZN`, `GOOGL`, and `META`
-- The `S&P 500` trend via the `SPY` ETF as a liquid market proxy
-- The `CBOE Volatility Index (VIX)` in a dedicated panel
+- Core U.S. market: `SPYM`, `VOO`, `IVV`, `VTI`
+- Growth and tech: `QQQM`, `QQQ`, `VUG`, `VGT`, `SMH`
+- Global and international: `VT`, `VXUS`
+- Income and cash: `VYM`, `SPYD`, `SPAXX`
 
 ## Run it
 
@@ -17,4 +18,4 @@ Then open [http://localhost:3000](http://localhost:3000).
 ## Notes
 
 - The frontend auto-refreshes every 30 minutes while open.
-- The server proxies Nasdaq's historical quote data so the browser does not need to call the finance API directly.
+- The server proxies Yahoo Finance chart data so the browser does not need to call the finance API directly.

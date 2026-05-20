@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily Stock Tracker</title>
+    <title>ETF Category Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -15,14 +15,13 @@
   <body>
     <div class="page-shell">
       <header class="hero">
-        <p class="eyebrow">Daily Stock Tracker</p>
+        <p class="eyebrow">Category ETF Tracker</p>
         <div class="hero-copy">
-          <h1>Updated daily stock prices.</h1>
+          <h1>Grouped market funds, plotted by category.</h1>
           <p class="hero-text">
-            This page follows LRCX, MU, several major tech leaders, and the broader S&amp;P 500
-            trend using daily closes. The benchmark line is shown through <strong>SPY</strong> so
-            the market view refreshes reliably alongside the stock names, and VIX has its own
-            dedicated volatility panel below.
+            This dashboard groups your selected funds into core U.S., growth and tech, global and
+            international, and income and cash. Each category gets its own plot so the lines stay
+            legible instead of collapsing into one crowded chart.
           </p>
         </div>
         <div class="hero-meta">
@@ -32,13 +31,11 @@
       </header>
 
       <main class="dashboard">
-        <section id="cards" class="cards" aria-label="Latest stock prices"></section>
-
-        <section class="chart-panel">
+        <section class="chart-panel chart-panel-controls">
           <div class="chart-toolbar">
             <div class="toolbar-copy">
-              <h2>Daily close history</h2>
-              <p>Daily points are refreshed automatically and can be refreshed on demand.</p>
+              <h2>Daily category history</h2>
+              <p>Use one shared range control and compare each category in its own panel below.</p>
             </div>
             <div class="toolbar-actions">
               <div class="range-picker" aria-label="Time range">
@@ -52,30 +49,10 @@
               <button id="refresh-button" class="refresh-button">Refresh now</button>
             </div>
           </div>
-
-          <div class="chart-frame">
-            <canvas id="chart" aria-label="Daily stock price line chart"></canvas>
-            <div id="tooltip" class="tooltip" hidden></div>
-          </div>
-
-          <div id="legend" class="chart-legend" aria-hidden="true"></div>
         </section>
 
-        <section class="chart-panel">
-          <div class="chart-toolbar chart-toolbar-single">
-            <div class="toolbar-copy">
-              <h2>CBOE Volatility Index (VIX)</h2>
-              <p>Tracked separately so volatility stays readable against much larger stock prices.</p>
-            </div>
-          </div>
-
-          <div class="chart-frame chart-frame-compact">
-            <canvas id="vix-chart" aria-label="CBOE Volatility Index line chart"></canvas>
-            <div id="vix-tooltip" class="tooltip" hidden></div>
-          </div>
-
-          <div id="vix-legend" class="chart-legend" aria-hidden="true"></div>
-        </section>
+        <section id="cards" class="cards" aria-label="Latest fund prices"></section>
+        <section id="category-panels" class="category-panels" aria-label="Category charts"></section>
       </main>
     </div>
 

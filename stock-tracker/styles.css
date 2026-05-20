@@ -109,6 +109,11 @@ body {
   gap: 24px;
 }
 
+.category-panels {
+  display: grid;
+  gap: 24px;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -167,6 +172,10 @@ body {
 .chart-panel {
   padding: 26px;
   border-radius: 30px;
+}
+
+.chart-panel-controls {
+  padding-bottom: 18px;
 }
 
 .chart-toolbar {
@@ -267,6 +276,12 @@ body {
 
 .chart-toolbar-single {
   margin-bottom: 14px;
+}
+
+.category-panel canvas {
+  width: 100%;
+  height: 320px;
+  display: block;
 }
 
 .tooltip {

@@ -12,78 +12,50 @@ const port = Number(process.env.PORT || 3000);
 const cacheTtlMs = 15 * 60 * 1000;
 const execFileAsync = promisify(execFile);
 
-const trackedStocks = [
+const categoryMeta = [
   {
-    alias: "LRCX",
-    symbol: "LRCX",
-    name: "LAM Research",
-    assetClass: "stocks",
-    note: "Lam Research, tracked directly under its listed ticker LRCX.",
+    key: "core-us",
+    title: "Core U.S. Market",
+    description: "Broad U.S. equity exposure and S&P 500-style core funds.",
   },
   {
-    alias: "MU",
-    symbol: "MU",
-    name: "Micron Technology",
-    assetClass: "stocks",
-    note: "Displayed and fetched as MU.",
+    key: "growth-tech",
+    title: "Growth & Tech",
+    description: "Nasdaq, growth, and semiconductor-heavy sector exposure.",
   },
   {
-    alias: "AAPL",
-    symbol: "AAPL",
-    name: "Apple",
-    assetClass: "stocks",
-    note: "Apple daily closing prices.",
+    key: "global-international",
+    title: "Global & International",
+    description: "World equity exposure outside a U.S.-only lens.",
   },
   {
-    alias: "MSFT",
-    symbol: "MSFT",
-    name: "Microsoft",
-    assetClass: "stocks",
-    note: "Microsoft daily closing prices.",
+    key: "income-cash",
+    title: "Income & Cash",
+    description: "Dividend-focused funds plus cash-like reserve exposure.",
   },
   {
-    alias: "NVDA",
-    symbol: "NVDA",
-    name: "NVIDIA",
-    assetClass: "stocks",
-    note: "NVIDIA daily closing prices.",
+    key: "volatility",
+    title: "Volatility",
+    description: "A separate market volatility panel for the CBOE Volatility Index.",
   },
-  {
-    alias: "AMZN",
-    symbol: "AMZN",
-    name: "Amazon",
-    assetClass: "stocks",
-    note: "Amazon daily closing prices.",
-  },
-  {
-    alias: "GOOGL",
-    symbol: "GOOGL",
-    name: "Alphabet",
-    assetClass: "stocks",
-    note: "Alphabet Class A daily closing prices.",
-  },
-  {
-    alias: "META",
-    symbol: "META",
-    name: "Meta",
-    assetClass: "stocks",
-    note: "Meta daily closing prices.",
-  },
-  {
-    alias: "S&P 500",
-    symbol: "SPY",
-    name: "S&P 500",
-    assetClass: "etf",
-    note: "S&P 500 trend shown through the SPY ETF as a liquid market proxy.",
-  },
-  {
-    alias: "VIX",
-    symbol: "^VIX",
-    name: "CBOE Volatility Index",
-    source: "yahoo",
-    valueType: "index",
-    note: "CBOE Volatility Index shown in its own panel for readability.",
-  },
+];
+
+const trackedAssets = [
+  { alias: "SPYM", symbol: "SPYM", name: "SPDR Portfolio S&P 1500 Composite Stock Market ETF", category: "core-us" },
+  { alias: "VOO", symbol: "VOO", name: "Vanguard S&P 500 ETF", category: "core-us" },
+  { alias: "IVV", symbol: "IVV", name: "iShares Core S&P 500 ETF", category: "core-us" },
+  { alias: "VTI", symbol: "VTI", name: "Vanguard Total Stock Market ETF", category: "core-us" },
+  { alias: "QQQM", symbol: "QQQM", name: "Invesco NASDAQ 100 ETF", category: "growth-tech" },
+  { alias: "QQQ", symbol: "QQQ", name: "Invesco QQQ Trust", category: "growth-tech" },
+  { alias: "VUG", symbol: "VUG", name: "Vanguard Growth ETF", category: "growth-tech" },
+  { alias: "VGT", symbol: "VGT", name: "Vanguard Information Technology ETF", category: "growth-tech" },
+  { alias: "SMH", symbol: "SMH", name: "VanEck Semiconductor ETF", category: "growth-tech" },
+  { alias: "VT", symbol: "VT", name: "Vanguard Total World Stock ETF", category: "global-international" },
+  { alias: "VXUS", symbol: "VXUS", name: "Vanguard Total International Stock ETF", category: "global-international" },
+  { alias: "VYM", symbol: "VYM", name: "Vanguard High Dividend Yield ETF", category: "income-cash" },
+  { alias: "SPYD", symbol: "SPYD", name: "SPDR Portfolio S&P 500 High Dividend ETF", category: "income-cash" },
+  { alias: "SPAXX", symbol: "SPAXX", name: "Fidelity Government Money Market Fund", category: "income-cash" },
+  { alias: "VIX", symbol: "^VIX", name: "CBOE Volatility Index", category: "volatility" },
 ];
 
 const staticFiles = {
@@ -95,180 +67,25 @@ const staticFiles = {
 const allowedRanges = new Set(["3mo", "6mo", "1y", "2y", "5y", "max", "ytd"]);
 const cache = new Map();
 
-function formatDate(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function resolveDateWindow(range) {
-  const today = new Date();
-  const toDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const fromDate = new Date(toDate);
-  let limit = 365;
-
-  switch (range) {
-    case "3mo":
-      fromDate.setMonth(fromDate.getMonth() - 3);
-      limit = 100;
-      break;
-    case "6mo":
-      fromDate.setMonth(fromDate.getMonth() - 6);
-      limit = 200;
-      break;
-    case "1y":
-      fromDate.setFullYear(fromDate.getFullYear() - 1);
-      limit = 370;
-      break;
-    case "2y":
-      fromDate.setFullYear(fromDate.getFullYear() - 2);
-      limit = 740;
-      break;
-    case "5y":
-      fromDate.setFullYear(fromDate.getFullYear() - 5);
-      limit = 1900;
-      break;
-    case "ytd":
-      fromDate.setMonth(0, 1);
-      limit = 370;
-      break;
-    case "max":
-      fromDate.setFullYear(fromDate.getFullYear() - 20);
-      limit = 9999;
-      break;
-    default:
-      fromDate.setFullYear(fromDate.getFullYear() - 1);
-      limit = 370;
-      break;
-  }
-
-  return {
-    fromDate: formatDate(fromDate),
-    toDate: formatDate(toDate),
-    limit,
-  };
-}
-
-function parseCurrencyValue(value) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const normalized = value.replace(/[$,]/g, "");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
+    "Access-Control-Allow-Origin": "*",
   });
   res.end(JSON.stringify(payload));
 }
 
-async function fetchChartData(stock, range) {
-  const cacheKey = `${stock.symbol}:${range}`;
+async function fetchChartData(asset, range) {
+  const cacheKey = `${asset.symbol}:${range}`;
   const cached = cache.get(cacheKey);
 
   if (cached && Date.now() - cached.timestamp < cacheTtlMs) {
     return cached.data;
   }
 
-  const source = stock.source || "nasdaq";
-  let points;
-
-  if (source === "yahoo") {
-    points = await fetchYahooChartPoints(stock, range);
-  } else {
-    points = await fetchNasdaqChartPoints(stock, range);
-  }
-
-  if (!points.length) {
-    throw new Error(`No price points available for ${stock.symbol}.`);
-  }
-
-  const latest = points.at(-1)?.value ?? null;
-  const previous = points.at(-2)?.value ?? null;
-  const change = Number.isFinite(latest) && Number.isFinite(previous)
-    ? Number((latest - previous).toFixed(2))
-    : null;
-  const changePercent = Number.isFinite(latest) && Number.isFinite(previous) && previous !== 0
-    ? Number((((latest - previous) / previous) * 100).toFixed(2))
-    : null;
-
-  const data = {
-    alias: stock.alias,
-    symbol: stock.symbol,
-    name: stock.name,
-    note: stock.note,
-    currency: stock.valueType === "index" ? "INDEX" : "USD",
-    valueType: stock.valueType || "currency",
-    marketPrice: latest,
-    latestClose: latest,
-    dailyChange: change,
-    dailyChangePercent: changePercent,
-    points,
-  };
-
-  cache.set(cacheKey, { timestamp: Date.now(), data });
-  return data;
-}
-
-async function fetchNasdaqChartPoints(stock, range) {
-  const { fromDate, toDate, limit } = resolveDateWindow(range);
   const endpoint =
-    `https://api.nasdaq.com/api/quote/${stock.symbol}/historical` +
-    `?assetclass=${stock.assetClass || "stocks"}&fromdate=${fromDate}&limit=${limit}&todate=${toDate}`;
-
-  const { stdout } = await execFileAsync("curl", [
-    "-sS",
-    "-L",
-    "--compressed",
-    "-H",
-    "User-Agent: Mozilla/5.0",
-    "-H",
-    "Accept: application/json",
-    "-w",
-    "\n__STATUS__:%{http_code}",
-    endpoint,
-  ]);
-
-  const marker = "\n__STATUS__:";
-  const markerIndex = stdout.lastIndexOf(marker);
-  const body = markerIndex >= 0 ? stdout.slice(0, markerIndex) : stdout;
-  const statusCode = markerIndex >= 0 ? Number(stdout.slice(markerIndex + marker.length).trim()) : 0;
-
-  if (statusCode !== 200) {
-    throw new Error(`Nasdaq returned ${statusCode} for ${stock.symbol}.`);
-  }
-
-  const payload = JSON.parse(body);
-  const rows = payload?.data?.tradesTable?.rows;
-
-  if (!Array.isArray(rows) || !rows.length) {
-    throw new Error(`No chart data returned for ${stock.symbol}.`);
-  }
-
-  return rows
-    .map((row) => {
-      const value = parseCurrencyValue(row.close);
-
-      if (!Number.isFinite(value)) {
-        return null;
-      }
-
-      const [month, day, year] = row.date.split("/");
-      return {
-        date: `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
-        value: Number(value.toFixed(2)),
-      };
-    })
-    .filter(Boolean)
-    .reverse();
-}
-
-async function fetchYahooChartPoints(stock, range) {
-  const endpoint =
-    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(stock.symbol)}` +
+    `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(asset.symbol)}` +
     `?interval=1d&range=${range}&includeAdjustedClose=true`;
 
   const { stdout } = await execFileAsync("curl", [
@@ -290,21 +107,21 @@ async function fetchYahooChartPoints(stock, range) {
   const statusCode = markerIndex >= 0 ? Number(stdout.slice(markerIndex + marker.length).trim()) : 0;
 
   if (statusCode !== 200) {
-    throw new Error(`Yahoo returned ${statusCode} for ${stock.symbol}.`);
+    throw new Error(`Yahoo returned ${statusCode} for ${asset.symbol}.`);
   }
 
   const payload = JSON.parse(body);
   const chart = payload?.chart?.result?.[0];
   const timestamps = chart?.timestamp || [];
+  const adjustedCloses = chart?.indicators?.adjclose?.[0]?.adjclose || [];
   const closes = chart?.indicators?.quote?.[0]?.close || [];
+  const instrumentType = chart?.meta?.instrumentType || "";
 
-  if (!timestamps.length || !closes.length) {
-    throw new Error(`No chart data returned for ${stock.symbol}.`);
-  }
-
-  return timestamps
+  const points = timestamps
     .map((timestamp, index) => {
-      const value = closes[index];
+      const adjustedValue = adjustedCloses[index];
+      const closeValue = closes[index];
+      const value = Number.isFinite(adjustedValue) ? adjustedValue : closeValue;
 
       if (!Number.isFinite(value)) {
         return null;
@@ -312,10 +129,52 @@ async function fetchYahooChartPoints(stock, range) {
 
       return {
         date: new Date(timestamp * 1000).toISOString().slice(0, 10),
-        value: Number(value.toFixed(2)),
+        value: Number(value.toFixed(4)),
       };
     })
     .filter(Boolean);
+
+  if (!points.length) {
+    throw new Error(`No price points available for ${asset.symbol}.`);
+  }
+
+  const latest = points.at(-1)?.value ?? null;
+  const previous = points.at(-2)?.value ?? null;
+  const change = Number.isFinite(latest) && Number.isFinite(previous)
+    ? Number((latest - previous).toFixed(4))
+    : null;
+  const changePercent = Number.isFinite(latest) && Number.isFinite(previous) && previous !== 0
+    ? Number((((latest - previous) / previous) * 100).toFixed(2))
+    : null;
+
+  const valueType = instrumentType === "MONEYMARKET"
+    ? "cash"
+    : instrumentType === "INDEX"
+      ? "index"
+      : "currency";
+  const note = valueType === "cash"
+    ? `${asset.alias} behaves like a cash reserve fund with very low volatility.`
+    : asset.alias === "VIX"
+      ? "VIX reflects expected S&P 500 volatility and is shown separately from the fund categories."
+      : `${asset.alias} tracks the ${categoryMeta.find((category) => category.key === asset.category)?.title.toLowerCase() || "selected"} basket.`;
+
+  const data = {
+    alias: asset.alias,
+    symbol: asset.symbol,
+    name: asset.name,
+    category: asset.category,
+    currency: valueType === "index" ? "INDEX" : "USD",
+    valueType,
+    marketPrice: latest,
+    latestClose: latest,
+    dailyChange: change,
+    dailyChangePercent: changePercent,
+    note,
+    points,
+  };
+
+  cache.set(cacheKey, { timestamp: Date.now(), data });
+  return data;
 }
 
 async function serveStaticFile(res, pathname) {
@@ -342,12 +201,13 @@ const server = createServer(async (req, res) => {
         ? url.searchParams.get("range")
         : "1y";
 
-      const stocks = await Promise.all(trackedStocks.map((stock) => fetchChartData(stock, range)));
+      const assets = await Promise.all(trackedAssets.map((asset) => fetchChartData(asset, range)));
 
       json(res, 200, {
         range,
         fetchedAt: new Date().toISOString(),
-        stocks,
+        categories: categoryMeta,
+        assets,
       });
       return;
     }
