@@ -1,13 +1,16 @@
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import dns from "node:dns";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
+dns.setDefaultResultOrder("ipv4first");
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const host = "127.0.0.1";
+const host = process.env.HOST || "localhost";
 const port = Number(process.env.PORT || 3000);
 const cacheTtlMs = 15 * 60 * 1000;
 const execFileAsync = promisify(execFile);
